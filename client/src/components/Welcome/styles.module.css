@@ -1,0 +1,52 @@
+.container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #131324;
+}
+
+.content {
+  text-align: center;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.iconWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 6rem;
+  height: 6rem;
+  background-color: rgba(154, 134, 243, 0.2);
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+}
+
+.icon {
+  width: 3rem;
+  height: 3rem;
+  color: #9a86f3;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: #9ca3af;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

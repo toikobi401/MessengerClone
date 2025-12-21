@@ -9,6 +9,8 @@ import { initializeSocket } from './utils/socket.js';
 // Import routes
 import authRoutes from './routes/authRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import friendRoutes from './routes/friendRoutes.js';
+import conversationRoutes from './routes/conversationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -31,6 +33,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/friends', friendRoutes);
+app.use('/api/conversations', conversationRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {

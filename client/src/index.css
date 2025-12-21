@@ -8,7 +8,7 @@
   }
 
   body {
-    @apply font-sans antialiased bg-secondary text-white;
+    @apply font-sans antialiased bg-gray-50 dark:bg-secondary text-gray-900 dark:text-white transition-colors;
   }
 
   #root {
@@ -22,21 +22,32 @@
     @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl;
   }
 
-  /* Custom scrollbar */
+  /* Custom scrollbar - Thin Modern Style (Discord/Messenger) */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 6px; /* Very thin for vertical scroll */
+    height: 6px; /* Very thin for horizontal scroll */
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    background: transparent; /* Invisible track */
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-primary/50 rounded-full;
+    background-color: #cbd5e1; /* Light gray for Light Mode */
+    border-radius: 20px; /* Fully rounded */
+    transition: background-color 0.2s ease;
+  }
+
+  :global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #374151; /* Dark gray for Dark Mode */
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary;
+    background-color: #94a3b8; /* Darker on hover (Light Mode) */
+  }
+
+  :global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #4b5563; /* Lighter on hover (Dark Mode) */
   }
 
   /* Message bubbles */

@@ -117,6 +117,18 @@ export const messageAPI = {
     } catch (error) {
       throw error;
     }
+  },
+
+  editMessage: async (messageId, newContent) => {
+    try {
+      const response = await api.put('/messages/edit', {
+        messageId,
+        newContent
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 

@@ -1,0 +1,191 @@
+.container {
+  /* Remove height and overflow - let parent (.content) handle scroll */
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 4rem;
+  height: 4rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+:global(.dark) .emptyIcon {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.iconSize {
+  width: 2rem;
+  height: 2rem;
+  color: #9ca3af;
+}
+
+:global(.dark) .iconSize {
+  color: #4b5563;
+}
+
+.emptyTitle {
+  color: #4b5563;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+:global(.dark) .emptyTitle {
+  color: #9ca3af;
+}
+
+.emptyHint {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+:global(.dark) .emptyHint {
+  color: #6b7280;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.contactItem:hover {
+  background-color: rgba(243, 244, 246, 1);
+}
+
+:global(.dark) .contactItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.contactItem.active {
+  background-color: #9a86f3;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.contactItem.active .username,
+.contactItem.active .status {
+  color: white !important;
+}
+
+.contactItem.active .status.online {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.avatarWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+
+:global(.dark) .avatar {
+  border-color: #374151;
+}
+
+.avatarPlaceholder {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, #9a86f3, #4e0eff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1.125rem;
+  border: 2px solid white;
+}
+
+:global(.dark) .avatarPlaceholder {
+  border-color: #374151;
+}
+
+.onlineBadge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  background-color: #22c55e;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
+:global(.dark) .onlineBadge {
+  border-color: #1f2937;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.username {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #111827;
+}
+
+:global(.dark) .username {
+  color: white;
+}
+
+.status {
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6b7280;
+}
+
+:global(.dark) .status {
+  color: #9ca3af;
+}
+
+.status.online {
+  color: #059669;
+}
+
+:global(.dark) .status.online {
+  color: #34d399;
+}
+
+.activeIndicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: white;
+  border-radius: 50%;
+}

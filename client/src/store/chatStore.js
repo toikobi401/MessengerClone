@@ -7,6 +7,7 @@ const useChatStore = create(
       // State
       currentUser: null,
       selectedChat: null,
+      currentConversationId: null, // New
       contacts: [],
       messages: [],
       onlineUsers: [],
@@ -21,8 +22,16 @@ const useChatStore = create(
         set({ contacts });
       },
 
-      changeChat: (user) => {
-        set({ selectedChat: user, messages: [] });
+      changeChat: (user, conversationId = null) => {
+        set({ 
+          selectedChat: user, 
+          currentConversationId: conversationId,
+          messages: [] 
+        });
+      },
+
+      setConversationId: (conversationId) => {
+        set({ currentConversationId: conversationId });
       },
 
       setMessages: (messages) => {
@@ -35,38 +44,40 @@ const useChatStore = create(
         }));
       },
 
+      updateMessage: (messageId, newContent) => {
+        set((state) => ({
+          messages: state.messages.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, message: newContent, isEdited: true }
+              : msg
+          )
+        }));
+      },
+
       setOnlineUsers: (users) => {
         set({ onlineUsers: users });
-      },
-
-      setLoading: (isLoading) => {
-        set({ isLoading });
-      },
-
-      clearChat: () => {
-        set({
-          selectedChat: null,
-          messages: []
-        });
       },
 
       logout: () => {
         set({
           currentUser: null,
           selectedChat: null,
+          currentConversationId: null,
           contacts: [],
           messages: [],
           onlineUsers: [],
           isLoading: false
         });
         localStorage.removeItem('messenger-user');
+        localStorage.removeItem('messenger-chat-store');
+        localStorage.removeItem('messenger-friend-store');
       },
 
       // Computed
       isUserOnline: (userId) => {
         return get().onlineUsers.includes(userId);
       }
-    }),
+    }), // ← Added comma here
     {
       name: 'messenger-chat-store',
       partialize: (state) => ({

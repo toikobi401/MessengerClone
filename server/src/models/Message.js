@@ -15,6 +15,16 @@ const Message = sequelize.define('Message', {
       notEmpty: true
     }
   },
+  type: {
+    type: DataTypes.ENUM('text', 'image', 'video', 'file'),
+    defaultValue: 'text',
+    allowNull: false
+  },
+  isEdited: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  },
   users: {
     type: DataTypes.JSON,
     allowNull: false,
@@ -27,6 +37,14 @@ const Message = sequelize.define('Message', {
       model: 'users',
       key: 'id'
     }
+  },
+  conversationId: {
+    type: DataTypes.UUID,
+    allowNull: true, // Nullable for backward compatibility
+    references: {
+      model: 'conversations',
+      key: 'id'
+    }
   }
 }, {
   tableName: 'messages',
@@ -37,8 +55,10 @@ const Message = sequelize.define('Message', {
       fields: ['senderId']
     },
     {
-      fields: ['users'],
-      type: 'FULLTEXT'
+      fields: ['conversationId']
+    },
+    {
+      fields: ['type']
     }
   ]
 });
