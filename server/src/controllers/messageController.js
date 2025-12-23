@@ -1,20 +1,66 @@
 import { Message, User, Conversation, ConversationParticipant } from '../models/index.js';
 import { Op } from 'sequelize';
+import cloudinary from '../config/cloudinary.js';
+
+// @desc    Generate Cloudinary signature for direct upload
+// @route   GET /api/messages/generate-signature
+// @access  Private
+export const generateSignature = async (req, res) => {
+  try {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = 'messenger_uploads';
+    
+    // Params to sign - MUST match exactly what client sends
+    const paramsToSign = {
+      timestamp: timestamp,
+      folder: folder
+    };
+
+    // Generate signature using Cloudinary SDK
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        signature,
+        timestamp,
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey: process.env.CLOUDINARY_API_KEY,
+        folder
+      }
+    });
+  } catch (error) {
+    console.error('Generate signature error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error generating upload signature',
+      error: error.message
+    });
+  }
+};
 
 // @desc    Add new message (text or media)
 // @route   POST /api/messages/addmsg
 // @access  Private
 export const addMessage = async (req, res) => {
   try {
-    const { from, to, message, conversationId } = req.body;
-    const uploadedFile = req.file; // Multer uploaded file
+    const { from, to, message, conversationId, type, fileUrl } = req.body;
+    const uploadedFile = req.file; // Multer uploaded file (for small files)
 
     // Determine message type and content
     let messageContent = message;
-    let messageType = 'text';
+    let messageType = type || 'text';
 
-    if (uploadedFile) {
-      // File uploaded - use Cloudinary URL
+    // Priority 1: Direct Cloudinary URL (for large files uploaded via chunked upload)
+    if (fileUrl) {
+      messageContent = fileUrl;
+      messageType = type || 'file'; // Use provided type or default to 'file'
+    }
+    // Priority 2: Multer uploaded file (for small files < 10MB)
+    else if (uploadedFile) {
       messageContent = uploadedFile.path; // Cloudinary secure URL
       
       // Determine type based on mimetype

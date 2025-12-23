@@ -129,6 +129,15 @@ export const messageAPI = {
     } catch (error) {
       throw error;
     }
+  },
+
+  generateSignature: async () => {
+    try {
+      const response = await api.get('/messages/generate-signature');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 

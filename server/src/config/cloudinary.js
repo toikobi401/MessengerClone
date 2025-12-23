@@ -14,8 +14,8 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'messenger_clone_uploads',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'mp4', 'mkv', 'avi', 'mov'],
-    resource_type: 'auto', // Automatically detect image or video
+    allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'mp4', 'mkv', 'avi', 'mov', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'],
+    resource_type: 'auto', // Automatically detect image, video, or raw file
     transformation: [
       {
         quality: 'auto:good',
@@ -29,14 +29,27 @@ const storage = new CloudinaryStorage({
 export const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 10 * 1024 * 1024 // 10MB limit for small files (large files use chunked upload)
   },
   fileFilter: (req, file, cb) => {
-    // Accept images and videos only
-    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+    // Accept images, videos, and documents
+    const allowedMimes = [
+      'image/', 'video/', 
+      'application/pdf', 
+      'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/zip',
+      'application/x-rar-compressed'
+    ];
+    
+    const isAllowed = allowedMimes.some(mime => file.mimetype.startsWith(mime) || file.mimetype === mime);
+    
+    if (isAllowed) {
       cb(null, true);
     } else {
-      cb(new Error('Only image and video files are allowed!'), false);
+      cb(new Error('File type not supported. Only images, videos, and documents are allowed.'), false);
     }
   }
 });

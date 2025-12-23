@@ -5,7 +5,9 @@ import useChatStore from '../../store/chatStore';
 import { messageAPI } from '../../services/api';
 import { conversationAPI } from '../../services/conversationApi';
 import { getSocket } from '../../utils/socket';
+import { uploadFile, SMALL_FILE_THRESHOLD } from '../../utils/chunkedUpload';
 import MessageBubble from '../MessageBubble';
+import UploadProgressBar from '../UploadProgressBar';
 import styles from './styles.module.css';
 import { formatMessageTime } from './animations';
 
@@ -27,6 +29,8 @@ const ChatContainer = () => {
   const [isSending, setIsSending] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const socket = getSocket();
@@ -118,16 +122,19 @@ const ChatContainer = () => {
     
     if (!file) return;
 
-    // Validate file size (10MB)
-    const maxSize = 10 * 1024 * 1024;
+    // Validate file size (5GB)
+    const maxSize = 5 * 1024 * 1024 * 1024; // 5GB
     if (file.size > maxSize) {
-      alert('File size must be less than 10MB');
+      alert('File size must be less than 5GB');
       return;
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-      alert('Only image and video files are allowed');
+    // Validate file type - Accept all common file types
+    const allowedTypes = ['image/', 'video/', 'application/pdf', 'application/msword', 'application/vnd.', 'application/zip', 'application/x-rar'];
+    const isAllowed = allowedTypes.some(type => file.type.startsWith(type) || file.type.includes(type));
+    
+    if (!isAllowed) {
+      alert('File type not supported. Please upload images, videos, documents, or archives.');
       return;
     }
 
@@ -168,22 +175,87 @@ const ChatContainer = () => {
       let messageContent = messageText;
 
       if (selectedFile) {
-        // Send file using FormData
-        const formData = new FormData();
-        formData.append('from', currentUser.id);
-        formData.append('to', selectedChat.id);
-        formData.append('conversationId', currentConversationId);
-        formData.append('file', selectedFile);
-        
-        if (messageText) {
-          formData.append('message', messageText);
+        const fileSize = selectedFile.size;
+        const isLargeFile = fileSize >= SMALL_FILE_THRESHOLD;
+
+        // Determine file type
+        if (selectedFile.type.startsWith('image/')) {
+          messageType = 'image';
+        } else if (selectedFile.type.startsWith('video/')) {
+          messageType = 'video';
+        } else {
+          messageType = 'file';
         }
 
-        response = await conversationAPI.sendMessage(formData, true); // true = isFormData
-        
-        if (response.success) {
-          messageContent = response.data.message; // Cloudinary URL
-          messageType = response.data.type;
+        if (isLargeFile) {
+          // Use chunked upload for large files
+          console.log(`🚀 Large file detected (${(fileSize / 1024 / 1024).toFixed(2)} MB) - using chunked upload`);
+          
+          try {
+            setIsUploading(true);
+            setUploadProgress(0);
+
+            // Step 1: Get signature from backend
+            const signatureResponse = await messageAPI.generateSignature();
+            if (!signatureResponse.success) {
+              throw new Error('Failed to generate upload signature');
+            }
+
+            // Step 2: Upload file directly to Cloudinary with progress tracking
+            const uploadResult = await uploadFile(
+              selectedFile,
+              (progress) => setUploadProgress(progress),
+              signatureResponse.data
+            );
+
+            if (!uploadResult || !uploadResult.secure_url) {
+              throw new Error('Upload failed - no URL returned');
+            }
+
+            messageContent = uploadResult.secure_url;
+
+            // Step 3: Save message with Cloudinary URL
+            response = await conversationAPI.sendMessage({
+              from: currentUser.id,
+              to: selectedChat.id,
+              conversationId: currentConversationId,
+              fileUrl: uploadResult.secure_url,
+              type: messageType,
+              message: messageText || `Shared a ${messageType}`
+            });
+
+            console.log('✅ Large file upload completed successfully');
+          } catch (uploadError) {
+            console.error('❌ Chunked upload failed:', uploadError);
+            alert(`Upload failed: ${uploadError.message}`);
+            setIsSending(false);
+            setIsUploading(false);
+            setUploadProgress(0);
+            return;
+          } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
+          }
+        } else {
+          // Use standard multer upload for small files (< 10MB)
+          console.log(`📤 Small file detected (${(fileSize / 1024 / 1024).toFixed(2)} MB) - using standard upload`);
+          
+          const formData = new FormData();
+          formData.append('from', currentUser.id);
+          formData.append('to', selectedChat.id);
+          formData.append('conversationId', currentConversationId);
+          formData.append('file', selectedFile);
+          
+          if (messageText) {
+            formData.append('message', messageText);
+          }
+
+          response = await conversationAPI.sendMessage(formData, true); // true = isFormData
+          
+          if (response.success) {
+            messageContent = response.data.message; // Cloudinary URL
+            messageType = response.data.type;
+          }
         }
 
         handleRemoveFile();
@@ -308,8 +380,21 @@ const ChatContainer = () => {
 
       {/* Input Area */}
       <div className={styles.inputArea}>
+        {/* Upload Progress Bar */}
+        {isUploading && (
+          <UploadProgressBar
+            progress={uploadProgress}
+            fileName={selectedFile?.name || 'Unknown file'}
+            onCancel={() => {
+              setIsUploading(false);
+              setUploadProgress(0);
+              handleRemoveFile();
+            }}
+          />
+        )}
+
         {/* File Preview */}
-        {filePreview && (
+        {filePreview && !isUploading && (
           <div className={styles.filePreview}>
             {selectedFile?.type.startsWith('image/') ? (
               <img src={filePreview} alt="Preview" className={styles.previewImage} />
@@ -344,7 +429,7 @@ const ChatContainer = () => {
             type="file"
             ref={fileInputRef}
             onChange={handleFileSelect}
-            accept="image/*,video/*"
+            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar"
             style={{ display: 'none' }}
           />
 
@@ -353,7 +438,7 @@ const ChatContainer = () => {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className={styles.imageBtn}
-            disabled={isSending}
+            disabled={isSending || isUploading}
             title="Upload Image/Video"
           >
             <ImagePlus className={styles.imageIcon} />
@@ -364,7 +449,7 @@ const ChatContainer = () => {
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className={styles.emojiBtn}
-            disabled={isSending}
+            disabled={isSending || isUploading}
           >
             <Smile className={styles.emojiIcon} />
           </button>
@@ -374,18 +459,18 @@ const ChatContainer = () => {
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={isUploading ? "Uploading file..." : "Type a message..."}
             className={styles.messageInput}
-            disabled={isSending}
+            disabled={isSending || isUploading}
           />
 
           {/* Send Button */}
           <button
             type="submit"
-            disabled={(!inputMessage.trim() && !selectedFile) || isSending}
+            disabled={(!inputMessage.trim() && !selectedFile) || isSending || isUploading}
             className={styles.sendBtn}
           >
-            {isSending ? (
+            {isSending || isUploading ? (
               <Loader2 className={styles.sendSpinner} />
             ) : (
               <Send className={styles.sendIcon} />
