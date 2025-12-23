@@ -8,9 +8,17 @@ A production-ready messenger clone built with **React**, **Node.js**, **Express*
 
 - ✅ **Real-time Messaging** - Instant message delivery with Socket.io
 - ✅ **User Authentication** - Secure JWT-based auth with bcrypt password hashing
+- ✅ **Email OTP Verification** - 2-step registration with email verification
+- ✅ **Two-Factor Authentication (2FA)** - Login security with OTP codes
+- ✅ **Google OAuth** - Sign in with Google account
+- ✅ **Profile Management** - Edit username, avatar, and password
+- ✅ **Avatar Upload** - Cloudinary integration for profile pictures
 - ✅ **Online Status** - See who's online in real-time
 - ✅ **Message History** - Persistent message storage with MySQL
-- ✅ **Modern UI** - Beautiful dark theme with Tailwind CSS
+- ✅ **Media Upload** - Send images, videos, and files in chat
+- ✅ **Message Editing** - Edit sent messages
+- ✅ **Friend System** - Send/accept friend requests
+- ✅ **Modern UI** - Beautiful dark theme with Tailwind CSS and glassmorphism
 - ✅ **Emoji Support** - Emoji picker for expressive messaging
 - ✅ **Responsive Design** - Works on desktop and mobile devices
 - ✅ **Clean Architecture** - Organized monorepo structure
@@ -38,6 +46,9 @@ A production-ready messenger clone built with **React**, **Node.js**, **Express*
 - Socket.io
 - JWT (Authentication)
 - Bcryptjs (Password Hashing)
+- Nodemailer (Email OTP)
+- Multer + Cloudinary (File Upload)
+- Passport.js (Google OAuth)
 - CORS
 
 ---
@@ -113,14 +124,41 @@ Choose your preferred guide:
 ```env
 PORT=5000
 NODE_ENV=development
+
+# Database
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=messenger_clone
 DB_USER=root
 DB_PASSWORD=your_mysql_password
+
+# JWT
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 JWT_EXPIRES_IN=7d
+
+# CORS
 CLIENT_URL=http://localhost:5173
+
+# Cloudinary (Required for Media & Avatar Upload)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Email/SMTP (OTP System - Choose one)
+# Option 1: Mailtrap (Development)
+SMTP_HOST=sandbox.smtp.mailtrap.io
+SMTP_PORT=2525
+SMTP_USER=your_mailtrap_username
+SMTP_PASS=your_mailtrap_password
+
+# Option 2: Gmail (Production)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_gmail_app_password
+
+# Google OAuth (Optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
 ```
 
 **Frontend** (`client/.env`):

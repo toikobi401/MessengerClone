@@ -68,9 +68,36 @@ export const authAPI = {
     }
   },
 
+  verifyRegistration: async (data) => {
+    try {
+      const response = await api.post('/auth/verify-registration', data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   login: async (credentials) => {
     try {
       const response = await api.post('/auth/login', credentials);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  verifyLogin: async (data) => {
+    try {
+      const response = await api.post('/auth/verify-login', data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  resendOTP: async (data) => {
+    try {
+      const response = await api.post('/auth/resend-otp', data);
       return response.data;
     } catch (error) {
       throw error;
@@ -134,6 +161,32 @@ export const messageAPI = {
   generateSignature: async () => {
     try {
       const response = await api.get('/messages/generate-signature');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
+// User API calls
+export const userAPI = {
+  updateProfile: async (userId, formData) => {
+    try {
+      // Create FormData for multipart/form-data upload
+      const response = await api.put(`/users/${userId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getUserProfile: async (userId) => {
+    try {
+      const response = await api.get(`/users/${userId}`);
       return response.data;
     } catch (error) {
       throw error;

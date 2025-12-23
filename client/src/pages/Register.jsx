@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import useChatStore from '../store/chatStore';
-import { UserPlus, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
+import OtpInput from '../components/OtpInput';
 
 const Register = () => {
   const navigate = useNavigate();
   const setCurrentUser = useChatStore((state) => state.setCurrentUser);
 
+  // Form states
+  const [step, setStep] = useState('form'); // 'form' | 'otp' | 'success'
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -25,6 +28,7 @@ const Register = () => {
     setError('');
   };
 
+  // Step 1: Submit registration form (sends OTP)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -59,15 +63,10 @@ const Register = () => {
         password: formData.password
       });
 
-      if (response.success) {
-        // Store user in localStorage
-        localStorage.setItem('messenger-user', JSON.stringify(response.data));
-        
-        // Update Zustand store
-        setCurrentUser(response.data.user);
-
-        // Navigate to chat
-        navigate('/');
+      if (response.success && response.status === 'PENDING_OTP') {
+        // Move to OTP verification step
+        setStep('otp');
+        setError('');
       }
     } catch (error) {
       setError(error.message || 'Registration failed. Please try again.');
@@ -76,6 +75,127 @@ const Register = () => {
       setIsLoading(false);
     }
   };
+
+  // Step 2: Verify OTP and complete registration
+  const handleOtpComplete = async (otp) => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await authAPI.verifyRegistration({
+        email: formData.email,
+        otp: otp,
+        username: formData.username,
+        password: formData.password
+      });
+
+      if (response.success) {
+        // Store user in localStorage
+        localStorage.setItem('messenger-user', JSON.stringify(response.data));
+        
+        // Update Zustand store
+        setCurrentUser(response.data.user);
+
+        // Show success briefly before redirecting
+        setStep('success');
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      }
+    } catch (error) {
+      setError(error.message || 'Invalid verification code. Please try again.');
+      console.error('OTP verification error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Resend OTP
+  const handleResendOtp = async () => {
+    try {
+      const response = await authAPI.resendOTP({
+        email: formData.email,
+        purpose: 'registration'
+      });
+
+      if (response.success) {
+        setError('');
+      }
+    } catch (error) {
+      setError(error.message || 'Failed to resend code. Please try again.');
+      console.error('Resend OTP error:', error);
+    }
+  };
+
+  // Go back to form
+  const handleBackToForm = () => {
+    setStep('form');
+    setError('');
+  };
+
+  // Render based on step
+  if (step === 'otp') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-dark to-secondary p-4">
+        <div className="w-full max-w-md">
+          {/* Back Button */}
+          <button
+            onClick={handleBackToForm}
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6"
+          >
+            <ArrowLeft size={20} />
+            <span>Back</span>
+          </button>
+
+          {/* Header */}
+          <div className="text-center mb-8 animate-fade-in">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
+              <Mail className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">Verify Your Email</h1>
+            <p className="text-gray-400">
+              We sent a 6-digit code to <br />
+              <span className="text-white font-semibold">{formData.email}</span>
+            </p>
+          </div>
+
+          {/* OTP Input Card */}
+          <div className="glass p-8 animate-fade-in">
+            {error && (
+              <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-lg text-sm mb-6">
+                {error}
+              </div>
+            )}
+
+            <OtpInput
+              onComplete={handleOtpComplete}
+              onResend={handleResendOtp}
+              expirySeconds={300}
+              loading={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'success') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-dark to-secondary p-4">
+        <div className="w-full max-w-md text-center animate-fade-in">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-6">
+            <CheckCircle className="w-12 h-12 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome to Messenger!</h1>
+          <p className="text-gray-400">Your account has been created successfully.</p>
+          <div className="mt-6">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+            <p className="text-sm text-gray-500 mt-2">Redirecting to chat...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-dark to-secondary p-4">

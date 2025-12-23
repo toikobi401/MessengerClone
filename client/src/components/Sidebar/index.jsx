@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Users, Bell, Moon, Sun, Settings } from 'lucide-react';
 import useChatStore from '../../store/chatStore';
 import useFriendStore from '../../store/friendStore';
@@ -8,6 +9,7 @@ import ContactsList from '../ContactsList';
 import styles from './styles.module.css';
 
 const Sidebar = ({ onRequestsClick }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' or 'find'
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
@@ -27,6 +29,10 @@ const Sidebar = ({ onRequestsClick }) => {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
   };
 
   return (
@@ -66,6 +72,7 @@ const Sidebar = ({ onRequestsClick }) => {
 
             {/* Settings Button */}
             <button
+              onClick={handleSettingsClick}
               className={styles.iconBtn}
               title="Settings"
             >

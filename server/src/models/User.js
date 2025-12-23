@@ -27,11 +27,15 @@ const User = sequelize.define('User', {
       notEmpty: true
     }
   },
+  googleId: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    unique: true
+  },
   password: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true, // Nullable for Google OAuth users
     validate: {
-      notEmpty: true,
       len: [6, 255]
     }
   },

@@ -4,6 +4,7 @@ import Message from './Message.js';
 import FriendRequest from './FriendRequest.js';
 import Conversation from './Conversation.js';
 import ConversationParticipant from './ConversationParticipant.js';
+import EmailOtp from './EmailOtp.js';
 
 // Define associations
 User.hasMany(Message, {
@@ -77,4 +78,4 @@ const syncModels = async () => {
   }
 };
 
-export { User, Message, FriendRequest, Conversation, ConversationParticipant, syncModels };
+export { User, Message, FriendRequest, Conversation, ConversationParticipant, EmailOtp, syncModels };
